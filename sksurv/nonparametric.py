@@ -623,7 +623,7 @@ class SurvivalFunctionEstimator(BaseEstimator):
         if not return_conf_int:
             return Shat
 
-        ci = np.empty((2, time.shape[0]), dtype=float)
+        ci = np.empty((2, Shat.size), dtype=float)
         ci[:, extends] = np.nan
         ci[:, valid] = self.conf_int_[:, idx]
         return Shat, ci

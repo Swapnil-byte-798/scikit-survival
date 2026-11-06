@@ -2845,6 +2845,23 @@ class TestKaplanMeier:
         assert_array_almost_equal(prob, true_y)
         assert_array_almost_equal(ci, km_ci)
 
+    @pytest.mark.parametrize("query", [[4, 2, 5, 1], [4, 5]])
+    def test_predict_confidence_interval_past_last_observation(self, query):
+        y = Surv.from_arrays([True, True, True], [1, 2, 3])
+        estimator = SurvivalFunctionEstimator(conf_type="log-log").fit(y)
+
+        probability, ci = estimator.predict_proba(query, return_conf_int=True)
+
+        beyond = np.asarray(query) > 3
+        assert ci.shape == (2, len(query))
+        assert_array_equal(probability[beyond], 0.0)
+        assert_array_equal(np.isnan(ci[:, beyond]), True)
+        if not beyond.all():
+            within = np.asarray(query)[~beyond]
+            expected_probability, expected_ci = estimator.predict_proba(within, return_conf_int=True)
+            assert_allclose(probability[~beyond], expected_probability)
+            assert_allclose(ci[:, ~beyond], expected_ci)
+
     @staticmethod
     @pytest.mark.parametrize("time,event,true_x,true_y,km_var", SimpleDataKMCases().get_cases())
     def test_wrong_dtype(time, event, true_x, true_y, km_var):  # noqa: F821 undefined name
